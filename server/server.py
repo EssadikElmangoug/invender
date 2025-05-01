@@ -7,6 +7,7 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 from flask_cors import CORS
 from dotenv import load_dotenv
+import ollama
 
 # Load environment variables from .env file
 load_dotenv()
@@ -142,6 +143,13 @@ def verify_token_endpoint():
         "user_id": user_id,
         "username": user['username']
     })
+
+@app.route('/api/chat', methods=['POST'])
+def chat():
+    data = request.get_json()
+    response = ollama.chat(model='llama2', messages=data)
+    print(response['message']['content'])
+    return jsonify(response['message']['content']), 200
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

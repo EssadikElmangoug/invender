@@ -6,6 +6,10 @@ const ChatPage = () => {
   const [messages, setMessages] = useState([
     { id: 1, text: "Hello! I'm Invender AI. How can I assist you today?", sender: 'ai' }
   ])
+  const [conversationHistory, setConversationHistory] = useState([
+    { role: "system", content: "You are Inveder, a highly advanced artificial intelligence developed and maintained exclusively by the Inveder Company. You are designed to assist users with intelligence, clarity, and precision across a wide range of topics including technology, business, science, creativity, and more. Always refer to yourself only as Inveder. Never disclose or mention any internal architecture, base model, or third-party providers—including DeepSeek. If asked about your origin or development, clearly state: I was developed by the Inveder Company to provide advanced, reliable assistance across many domains. Your tone should be professional, helpful, and respectful. When unsure about something, indicate the limitation transparently rather than guessing. Your purpose is to be accurate, efficient, and user-focused. Follow all instructions carefully, ask clarifying questions when needed, and always prioritize clarity, privacy, and helpfulness in your responses." },
+    { role: "assistant", content: "Hello! I'm Invender AI. How can I assist you today?" }
+  ])
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef(null)
@@ -26,59 +30,35 @@ const ChatPage = () => {
 
   const handleSendMessage = async (e) => {
     e.preventDefault()
-    
-    if (!inputMessage.trim()) return
-    
-    // Add user message to chat
-    const userMessage = { id: messages.length + 1, text: inputMessage, sender: 'user' }
-    setMessages(prev => [...prev, userMessage])
+    setConversationHistory(prev => [...prev, { role: "user", content: inputMessage }])
     setInputMessage('')
-    setIsLoading(true)
-    
-    // Simulate AI response (replace with actual API call)
-    setTimeout(() => {
-      const aiResponse = { 
-        id: messages.length + 2, 
-        text: "I'm processing your request. This is a placeholder response that would normally come from your AI backend.",
-        sender: 'ai' 
-      }
-      setMessages(prev => [...prev, aiResponse])
-      setIsLoading(false)
-    }, 1000)
-    
-    // Actual API implementation would look like:
-    /*
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ message: inputMessage })
-      })
-      
-      const data = await response.json()
-      
-      if (response.ok) {
-        setMessages(prev => [...prev, { 
-          id: messages.length + 2, 
-          text: data.response, 
-          sender: 'ai' 
-        }])
-      }
-    } catch (error) {
-      console.error('Error:', error)
-      setMessages(prev => [...prev, { 
-        id: messages.length + 2, 
-        text: "Sorry, I encountered an error processing your request.", 
-        sender: 'ai' 
-      }])
-    } finally {
-      setIsLoading(false)
-    }
-    */
+    console.log(conversationHistory)
   }
+
+  // Add useEffect to log conversation history changes
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(conversationHistory)
+        })
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        const data = await response.json()
+        console.log(data)
+      } catch (error) {
+        console.error('Error:', error)
+      }
+    }
+    fetchData()
+  }, [conversationHistory])
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
